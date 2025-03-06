@@ -1,0 +1,25 @@
+[project]
+name = "tttoneliner"
+version = "0.0.1"
+description = "The game of Tic-Tac-Toe in one line of code."
+authors = [
+    {name = "alternyxx", email = "alternyxx@gmail.com"}
+]
+maintainers = [
+  {name = "alternyxx", email = "alternyxx@gmail.com" }
+]
+license = {text = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+]
+
+[project.scripts]
+tttol = "tttoneliner.tttoneliner:main"
+
+[project.urls]
+repository = "https://github.com/alternyxx/tttoneliner/"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
