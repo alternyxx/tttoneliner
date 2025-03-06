@@ -1,6 +1,6 @@
 use std::cmp;
 
-pub fn board_state(board: [i8; 9]) -> i32 {
+pub fn board_state(board: [i8; 9], a: i32, b: i32, c: i32) -> i32 {
     let mut o: i32 = 0;
     
     for (i, pos) in board.iter().enumerate() {
@@ -8,9 +8,9 @@ pub fn board_state(board: [i8; 9]) -> i32 {
         
         let val: i32;
         match *pos {
-            0 => val = 1,
-            1 => val = 2,
-            2 => val = 3,
+            0 => val = a,
+            1 => val = b,
+            2 => val = c,
             _ => panic!("UHM"),
         }
 
