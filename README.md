@@ -19,18 +19,14 @@ B = \sum_{n=0}^8 C_n \times 10^n\\
 \text{where } C_n \in \{E, X, O\} \text{ and represents the value at position } n
 ```
 
-```math
-\text{B is also such that }\\
-n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}\\
-n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}
-```
+
+B is also such that
+$$n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}$$
+$$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$
 
 
-```math
-\text{We try to find a function } f(B) \text{ that returns the optimal move}
-\\[1ex]
-\text{Currently trying } f(B) = \left(N \times x\right) mod 9
-```
+We try to find a function f(B) that returns the optimal move
+$$\text{Currently trying } f(B) = \left(N \times x\right) mod \ 9$$
 
 # Project Structure
 The three directories contain a README, going over their details but here's an overview for the purpose of each directory.  
