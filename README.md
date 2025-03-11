@@ -1,5 +1,6 @@
 # tttoneliner
 A project to make a Tic-Tac-Toe AI with a single simple line of code.
+[Showcase of a Tic-Tac-Toe game](/assets/tttol.gif)
 
 # Explanation
 ```math
