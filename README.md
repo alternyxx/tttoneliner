@@ -9,24 +9,25 @@ A project to make a Tic-Tac-Toe AI with a single simple line of code.
 
 # Explanation
 ```math
-\text{Let } E, X, O \text{ be distinct values such that}
-\newline
-E, X, O \in \{ x \mid 0 \leq x \leq 9 \} 
-\\[3ex]
+\text{Let } E, X, O \text{ be distinct values such that} \\
+E, X, O \in \{ x \mid 0 \leq x \leq 9 \}
+```
+  
 
-\text{Board state is represented as} 
-\\[1ex]
-B = \sum_{n=0}^8 C_n \times 10^n 
-\\[1ex]
+```math
+\text{Board state is represented as} \\
+B = \sum_{n=0}^8 C_n \times 10^n \\
 \text{where } C_n \in \{E, X, O\} \text{ and represents the value at position } n
-\\[3ex]
-\text{B is also such that }
-\\[1ex]
-n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}
-\\[1ex]
-n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}
-\\[3ex]
+```
 
+```math
+\text{B is also such that } \\
+n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or} \\
+n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}
+```
+
+
+```math
 \text{We try to find a function } f(B) \text{ that returns the optimal move}
 \\[1ex]
 \text{Currently trying } f(B) = \left(N \times x\right) mod 9
