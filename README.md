@@ -1,10 +1,10 @@
 # tttoneliner
 A project to make a Tic-Tac-Toe AI with a single simple line of code.  
 <img 
-    src="/assets/tttol.gif"
-    width="800"
+    src="/assets/tttol.gif" 
+    width="800" 
     height="450"
->
+/>
 
 # Explanation
 ```math
