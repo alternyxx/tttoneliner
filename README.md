@@ -8,10 +8,10 @@ A project to make a Tic-Tac-Toe AI with a single simple line of code.
 />
 
 # Explanation
-```math
-\text{Let } E, X, O \text{ be distinct values such that} \\   
+$$
+\text{Let } E, X, O \text{ be distinct values such that} \\ 
 E, X, O \in \{ x \mid 0 \leq x \leq 9 \}
-```
+$$
   
 
 ```math
