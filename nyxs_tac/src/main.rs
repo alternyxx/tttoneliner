@@ -29,14 +29,14 @@ fn main() -> std::io::Result<()> {
             continue // i may remove this, we'll see
         }
         let mut s: usize = 0;
-        let mut gcds: usize = 0;
+        let mut coprimes: usize = 0;
         for (board, optimal_move) in &optimal_moves {
             if ((board * i) as usize) % 9 == *optimal_move {
                 s += 1;
             }
 
             if (board * i).gcd(9) == 1 {
-                gcds += 1;
+                coprimes += 1;
             }
         }
         if s >= got_it {
@@ -46,7 +46,7 @@ fn main() -> std::io::Result<()> {
             println!("value of {} reached greather than {} mappings", i, s);
             break
         } else {
-            println!("{} mapped {} with denominators having reached {}", i, s, gcds);
+            println!("{} mapped {} with denominators having reached {}", i, s, coprimes);
         }
     }
 

@@ -22,12 +22,13 @@ def main() -> None:
         freq.append(int(board) * 11 % 9)
         if math.gcd(int(board), 9) > 1:
             gcds += 1
+        print(int(board)%9)
 
     print(gcds)
 
     fig, ax = plt.subplots()
-    # ax.scatter(*ds)
-    ax.hist(freq)
+    ax.scatter(*ds)
+    # ax.hist(freq)
     plt.show()
 
 
