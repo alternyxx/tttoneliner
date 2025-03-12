@@ -30,7 +30,7 @@ $$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$
 </p>
 
 The above is a subset of possible board positions and we try to map a function
-f(B) to receive a board position and return the optimal move.
+f(B) to receive a board position and return the optimal move.  
 $$\text{Currently trying } f(B) = \left(N \times x\right) mod \ 9$$  
 
 # Project Structure
