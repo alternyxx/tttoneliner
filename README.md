@@ -1,7 +1,7 @@
 # tttoneliner
 A project to make a Tic-Tac-Toe AI with a single simple line of code.  
 <br>
-[Examples of Tic-Tac-Toe being played](assets/tttol.gif)
+![Examples of Tic-Tac-Toe being played](./assets/tttol.gif)
 
 # Explanation
 <!-- We're not using ```math ``` because I can't get it to render linebreaks, same w/ $$ around the whole thing -->
@@ -10,13 +10,22 @@ $$E, X, O \in \\{ x \mid 0 \leq x \leq 9 \\}$$
   
 $$\text{Board state is represented as}$$  
 $$B = \sum_{n=0}^8 C_n \times 10^n$$  
-$$\text{where } C_n \in \\{E, X, O\\} \text{ and represents the value at position } n$$  
-  
+$$\text{where } C_n \in \\{E, X, O\\}$$  
+$$\text{ and represents the value at position } n$$  
+
 $$\text{B is also such that}$$  
 $$n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}$$  
 $$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$  
   
-We try to find a function f(B) that returns the optimal move  
+<p align="center">
+    <img
+        src="./assets/graph.png"
+        alt="Graph of the function we're trying to achieve"
+    />
+
+    We try to find a function f(B) that returns the optimal move  
+</p>
+
 $$\text{Currently trying } f(B) = \left(N \times x\right) mod \ 9$$  
 
 # Project Structure

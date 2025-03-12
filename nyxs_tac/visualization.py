@@ -15,6 +15,7 @@ def main() -> None:
 
     ds: list[list] = [[], []]
     freq: list[int] = []
+
     gcds: int = 0
     for board, optimal_move in dataset.items():
         ds[0].append(int(board))
@@ -22,13 +23,13 @@ def main() -> None:
         freq.append(int(board) * 11 % 9)
         if math.gcd(int(board), 9) > 1:
             gcds += 1
-        print(int(board)%9)
-
-    print(gcds)
 
     fig, ax = plt.subplots()
-    ax.scatter(*ds)
+    ax.scatter(*ds, c="fuchsia", label='Optimal Move', s=20.0, alpha=0.7)
+    
+    plt.xlabel('Board State')
     # ax.hist(freq)
+    plt.legend()
     plt.show()
 
 
