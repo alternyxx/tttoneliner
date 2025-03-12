@@ -21,6 +21,7 @@ $$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$
     <img
         src="/assets/graph.png"
         alt="Graph of the function we're trying to achieve"
+        width="50%"
     />
 
     We try to find a function f(B) that returns the optimal move  
