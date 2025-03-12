@@ -1,15 +1,11 @@
 # tttoneliner
 A project to make a Tic-Tac-Toe AI with a single simple line of code.  
 <br>
-<img 
-    src="/assets/tttol.gif" 
-    width="800" 
-    height="450"
-/>
+[Examples of Tic-Tac-Toe being played](assets/tttol.gif)
 
 # Explanation
 ```math
-\text{Let } E, X, O \text{ be distinct values such that}\\
+\text{Let } E, X, O \text{ be distinct values such that}\\\\
 E, X, O \in \{ x \mid 0 \leq x \leq 9 \}
 ```
 
@@ -20,8 +16,8 @@ B = \sum_{n=0}^8 C_n \times 10^n\\
 ```
 
 
-B is also such that
-$$n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}$$
+B is also such that  
+$$n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}$$  
 $$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$
 
 
