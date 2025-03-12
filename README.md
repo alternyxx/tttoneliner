@@ -7,7 +7,7 @@ A project to make a Tic-Tac-Toe AI with a single simple line of code.
 $$\text{Let } E, X, O \text{ be distinct values such that}$$  
 $$E, X, O \in \{ x \mid 0 \leq x \leq 9 \}$$  
   
-Board state is represented as  
+$$\text{Board state is represented as}$$  
 $$B = \sum_{n=0}^8 C_n \times 10^n$$  
 $$\text{where } C_n \in \{E, X, O\} \text{ and represents the value at position } n$$  
   
