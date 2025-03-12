@@ -1,7 +1,7 @@
 # tttoneliner
 A project to make a Tic-Tac-Toe AI with a single simple line of code.  
 <br>
-![Examples of Tic-Tac-Toe being played](./assets/tttol.gif)
+![Examples of Tic-Tac-Toe being played](/assets/tttol.gif)
 
 # Explanation
 <!-- We're not using ```math ``` because I can't get it to render linebreaks, same w/ $$ around the whole thing -->
@@ -19,7 +19,7 @@ $$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$
   
 <p align="center">
     <img
-        src="./assets/graph.png"
+        src="/assets/graph.png"
         alt="Graph of the function we're trying to achieve"
     />
 
