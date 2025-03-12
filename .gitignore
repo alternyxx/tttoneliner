@@ -2,3 +2,4 @@
 build/
 target/
 __pycache__
+dataset/dataset.json
