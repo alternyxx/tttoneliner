@@ -4,25 +4,19 @@ A project to make a Tic-Tac-Toe AI with a single simple line of code.
 [Examples of Tic-Tac-Toe being played](assets/tttol.gif)
 
 # Explanation
-```math
-\text{Let } E, X, O \text{ be distinct values such that}\\\\
-E, X, O \in \{ x \mid 0 \leq x \leq 9 \}
-```
-
-```math
-\text{Board state is represented as}\\
-B = \sum_{n=0}^8 C_n \times 10^n\\
-\text{where } C_n \in \{E, X, O\} \text{ and represents the value at position } n
-```
-
-
+$$\text{Let } E, X, O \text{ be distinct values such that}$$  
+$$E, X, O \in \{ x \mid 0 \leq x \leq 9 \}$$  
+  
+Board state is represented as  
+$$B = \sum_{n=0}^8 C_n \times 10^n$$  
+$$\text{where } C_n \in \{E, X, O\} \text{ and represents the value at position } n$$  
+  
 B is also such that  
 $$n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}$$  
-$$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$
-
-
-We try to find a function f(B) that returns the optimal move
-$$\text{Currently trying } f(B) = \left(N \times x\right) mod \ 9$$
+$$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$  
+  
+We try to find a function f(B) that returns the optimal move  
+$$\text{Currently trying } f(B) = \left(N \times x\right) mod \ 9$$  
 
 # Project Structure
 The three directories contain a README, going over their details but here's an overview for the purpose of each directory.  
