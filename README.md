@@ -1,5 +1,5 @@
 # tttoneliner
-### A project to make a Tic-Tac-Toe AI with a single simple line of code.  
+A project to make a Tic-Tac-Toe AI with a single simple line of code.  
 <br>
 ![Examples of Tic-Tac-Toe being played](/assets/tttol.gif)
 
@@ -20,7 +20,7 @@ $$\text{B is also such that}$$
 $$n(E) > 0 \text{ and } n(X) = n(O) \text{ if its player 1's turn or}$$  
 $$n(E) > 0 \text{ and } n(X) = n(O)+1 \text{ if its player 2's turn}$$  
   
-## 
+## Function
 <p align="center">
     <img
         src="/assets/graph.png"
