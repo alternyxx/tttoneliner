@@ -5,5 +5,6 @@ edition = "2021"
 
 [dependencies]
 env_logger = "0.11.7"
+pollster = "0.4.0"
 serde_json = "=1.0.140"
 wgpu = "24.0.1"

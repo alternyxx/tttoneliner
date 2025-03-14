@@ -1,6 +1,9 @@
 use std::collections::HashMap;
+use env_logger;
 
 pub async fn neuralnet(dataset: &mut HashMap<Vec<i8>, i8>) {
+    env_logger::init();
+    
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
         backends: wgpu::Backends::PRIMARY,
         ..Default::default()
@@ -17,11 +20,18 @@ pub async fn neuralnet(dataset: &mut HashMap<Vec<i8>, i8>) {
         None,
     ).await.unwrap();
     
-    // funny story i have with this if someone ever reads
-    // in my alternyxx.com repo theres this like bindgroup layout
-    // i was so confused as to why we dont put this immediatly above bind_group
-    // turns out this was also used in pipeline layout and it was included in the commend heading
-    // in the alternyxx.com repo and i was lmfao, past me predicted it
+    // ~~~ Compute shader Inputs ~~~ //
+    let x: &[f32] = &[1.0, 2.0, 3.0];
+    let x_buf = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("X buffer"),
+        size: x.len() as u64,
+        usage: 
+            wgpu::BufferUsages::COPY_DST
+            | wgpu::BufferUsages::COPY_SRC
+            | wgpu::BufferUsages::STORAGE,
+        mapped_at_creation: false,
+    });
+
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("bind group layout"),
         entries: &[
@@ -36,14 +46,22 @@ pub async fn neuralnet(dataset: &mut HashMap<Vec<i8>, i8>) {
                     min_binding_size: None,
                 },
                 count: None,
-            }
-        ]
+            },
+        ],
     });
     
+    // ~~~ Compute Pipeline ~~~ //
+    let cs_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("compute pipeline layout"),
+        bind_group_layouts: &[&bind_group_layout],
+        push_constant_ranges: &[],
+    });
+
     let cs_module = device.create_shader_module(wgpu::include_wgsl!("neuralnet.wgsl"));
+    
     let cs_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
         label: Some("compute pipeline"),
-        layout: None,
+        layout: Some(&cs_pipeline_layout),
         module: &cs_module,
         entry_point: Some("cs_main"),
         compilation_options: wgpu::PipelineCompilationOptions::default(),
@@ -56,7 +74,7 @@ pub async fn neuralnet(dataset: &mut HashMap<Vec<i8>, i8>) {
         entries: &[
             wgpu::BindGroupEntry {
                 binding: 0,
-                resource: None,
+                resource: x_buf.as_entire_binding(),
             }
         ]
     });
@@ -68,6 +86,7 @@ pub async fn neuralnet(dataset: &mut HashMap<Vec<i8>, i8>) {
         let mut compute_pass = encoder.begin_compute_pass(&Default::default());
 
         compute_pass.set_pipeline(&cs_pipeline);
+        compute_pass.set_bind_group(0, &bind_group, &[]);
         compute_pass.dispatch_workgroups(1, 1, 1);
     }
     

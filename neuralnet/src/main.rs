@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::collections::HashMap;
 use serde_json;
+use pollster;
 mod neuralnet;
 
 fn main() -> std::io::Result<()> {
@@ -23,7 +24,7 @@ fn main() -> std::io::Result<()> {
     }   
     drop(data);
 
-    neuralnet::neuralnet(&mut optimal_moves);
+    pollster::block_on(neuralnet::neuralnet(&mut optimal_moves));
 
     Ok(())
 }
