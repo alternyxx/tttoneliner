@@ -1,5 +1,6 @@
 *.egg-info
 build/
+dist/
 target/
 __pycache__
 dataset/dataset.json

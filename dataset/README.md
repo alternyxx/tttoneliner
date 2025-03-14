@@ -41,4 +41,8 @@ whereby, our minimax function returns 1, resulting in
    │ O │ X
 ───┼───┼───
    │   │
-```
+```  
+
+Lastly, this was the first ever rust code I wrote simply following documentation and I DID NOT know
+what ownership was. This means the code is horribly inefficient but hey- if I can generate the dataset
+I want in >1 second, no one can complain oki :3
