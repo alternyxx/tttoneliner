@@ -1,8 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::collections::HashMap;
-use serde_json;
-use pollster;
 mod neuralnet;
 
 fn main() -> std::io::Result<()> {
@@ -15,11 +13,11 @@ fn main() -> std::io::Result<()> {
     let data: serde_json::Value = serde_json::from_str(&data).expect("uhm");
 
     // Make the object into a hashmap for no reason
-    let mut optimal_moves: HashMap<Vec<i8>, i8> = HashMap::new();
+    let mut optimal_moves: HashMap<i32, i32> = HashMap::new();
     for (board, optimal_move) in data.as_object().unwrap() {
         optimal_moves.insert(
-            board.chars().map(|c| c.to_digit(10).unwrap() as i8).collect(), 
-            optimal_move.as_i64().unwrap() as i8
+            board.parse::<i32>().unwrap(), 
+            optimal_move.as_i64().unwrap() as i32,
         );
     }   
     drop(data);
