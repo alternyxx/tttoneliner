@@ -1,5 +1,3 @@
-use std::cmp;
-
 pub fn initial_state() -> [i8; 9] {
     return [
         0, 0, 0,
@@ -8,7 +6,7 @@ pub fn initial_state() -> [i8; 9] {
     ];
 }
 
-pub fn result(board: [i8; 9], action: i8) -> [i8; 9] {
+pub fn result(board: &[i8; 9], action: i8) -> [i8; 9] {
     let player_move = player(board);
 
     let mut new_board: [i8; 9] = board.clone();
@@ -22,8 +20,8 @@ pub fn result(board: [i8; 9], action: i8) -> [i8; 9] {
     return new_board;
 }
 
-fn player(board: [i8; 9]) -> i8{
-    if terminal(board) {
+pub fn player(board: &[i8; 9]) -> i8{
+    if terminal(&board) {
         return 0;
     }
 
@@ -31,9 +29,9 @@ fn player(board: [i8; 9]) -> i8{
     let mut player_two = 0;
 
     for cell in board {
-        if cell == 1 {
+        if cell == &1 {
             player_one += 1;
-        } else if cell == 2 {
+        } else if cell == &2 {
             player_two += 1;
         }
     }
@@ -45,7 +43,7 @@ fn player(board: [i8; 9]) -> i8{
     }
 }
 
-fn winner(board: [i8; 9]) -> i8 {
+pub fn winner(board: &[i8; 9]) -> i8 {
     // checking rows if theyre the same
     for i in (0..9).step_by(3) {
         if board[i] == board[i+1] && board[i+1] == board[i+2] {
@@ -70,13 +68,13 @@ fn winner(board: [i8; 9]) -> i8 {
     return 0;
 }
 
-pub fn terminal(board: [i8; 9]) -> bool {
+pub fn terminal(board: &[i8; 9]) -> bool {
     if winner(board) != 0 {
         return true;
     }
 
     for cell in board {
-        if cell == 0 {
+        if cell == &0 {
             return false;
         }
     }
@@ -84,7 +82,7 @@ pub fn terminal(board: [i8; 9]) -> bool {
 }
 
 
-fn utility(board: [i8; 9]) -> i8 {
+pub fn utility(board: &[i8; 9]) -> i8 {
     let winner = winner(board);
     if winner == 1 {
         return 1;
@@ -95,7 +93,7 @@ fn utility(board: [i8; 9]) -> i8 {
     }
 }
 
-pub fn actions(board: [i8; 9]) -> Vec<i8> {
+pub fn actions(board: &[i8; 9]) -> Vec<i8> {
     let mut possible_actions: Vec<i8> = Vec::new();
     
     if terminal(board) {
@@ -103,15 +101,15 @@ pub fn actions(board: [i8; 9]) -> Vec<i8> {
     }
 
     for (i, cell) in board.iter().enumerate() {
-        if *cell == 0 {
+        if cell == &0 {
             possible_actions.push(i as i8);
         }
     }
     return possible_actions;
 }
 
-pub fn minimax(board: [i8; 9]) -> i8 {
-    if board == initial_state() {
+pub fn minimax(board: &[i8; 9]) -> i8 {
+    if board == &initial_state() {
         panic!("uhm!");
     }
     
@@ -126,7 +124,7 @@ pub fn minimax(board: [i8; 9]) -> i8 {
         let mut current_optimal_value = -2;
 
         for action in actions(board) {
-            let val = min_value(result(board, action));
+            let val = min_value(&result(board, action));
             if val > current_optimal_value {
                 current_optimal_value = val;
                 optimal_action = action;
@@ -136,7 +134,7 @@ pub fn minimax(board: [i8; 9]) -> i8 {
         let mut current_optimal_value = 2;
 
         for action in actions(board) {
-            let val = max_value(result(board, action));
+            let val = max_value(&result(board, action));
             if val < current_optimal_value {
                 current_optimal_value = val;
                 optimal_action = action;
@@ -147,27 +145,27 @@ pub fn minimax(board: [i8; 9]) -> i8 {
     return optimal_action;
 }
 
-fn max_value(board: [i8; 9]) -> i8 {
+pub fn max_value(board: &[i8; 9]) -> i8 {
     if terminal(board) {
         return utility(board);
     }
 
     let mut value: i8 = -2;
     for action in actions(board) {
-        value = cmp::max(value, min_value(result(board, action)));
+        value = std::cmp::max(value, min_value(&result(board, action)));
     }
 
     return value;
 }
 
-fn min_value(board: [i8; 9]) -> i8 {
+pub fn min_value(board: &[i8; 9]) -> i8 {
     if terminal(board) {
         return utility(board);
     }
 
     let mut value: i8 = 2;
     for action in actions(board) {
-        value = cmp::min(value, max_value(result(board, action)));
+        value = std::cmp::min(value, max_value(&result(board, action)));
     }
 
     return value;

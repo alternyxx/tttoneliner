@@ -3,6 +3,14 @@
 version = 4
 
 [[package]]
+name = "dataset"
+version = "0.1.0"
+dependencies = [
+ "gcd",
+ "serde_json",
+]
+
+[[package]]
 name = "gcd"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -85,14 +93,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "ttt"
-version = "0.1.0"
-dependencies = [
- "gcd",
- "serde_json",
 ]
 
 [[package]]

@@ -1,6 +1,22 @@
 use std::collections::HashMap;
 
-use bytemuck;
+const BATCHES: u32 = 64;
+
+#[repr(C)]
+#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+struct Vec9F {  
+    x: [f32; 3], _padding1: f32,  // so apparantly wgsl vec3fs are 16 bytes...
+    y: [f32; 3], _padding2: f32,  // ngl- the compiler stuff w/ # in rust are quite weird
+    z: [f32; 3], _padding3: f32,  // i like them for #[test] but comon #[repr(C)]?? :sob:
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+struct Mat9x9F {
+    a: Vec9F, b: Vec9F, c: Vec9F,
+    d: Vec9F, e: Vec9F, f: Vec9F,
+    g: Vec9F, h: Vec9F, i: Vec9F,
+}
 
 pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
     env_logger::init();
@@ -22,20 +38,41 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
     ).await.unwrap();
     
     // ~~~ Compute shader Inputs ~~~ //
-    let x_v: Vec<i32>  = dataset.keys().copied().collect();
-    let x: &[u8] = bytemuck::cast_slice(&x_v);
-    let x_buf = device.create_buffer(&wgpu::BufferDescriptor {
-        label: Some("X buffer"),
-        size: x.len() as u64,
+    // to anyone, messing w/ this later, im running on 2 hours of sleep
+    // so anyways, since this obv needs explanation... (n ion wanna change main.rs anymore)
+    // we had a board as 111121111 and we make it into 9 f32s like [1.0, 1.0, ...]
+    let tmp: Vec<Vec<f32>> = dataset.keys().copied().map(|i| {
+        i.to_string().chars().map(|c| c.to_digit(10).unwrap() as f32).collect()
+    }).collect(); 
+    
+    // and seperate them into batches of 64 (workgroup size to access)
+    let batches: Vec<Vec<Vec<f32>>> = tmp.chunks(64).map(|s| s.into()).collect();
+
+    let current_batch_v = batches[0].iter().flatten().copied().collect::<Vec<f32>>();
+    let current_batch = current_batch_v.chunks(9).map(|board| {
+        Vec9F {
+            x: [board[0], board[1], board[2]], _padding1: 0.0, 
+            y: [board[3], board[4], board[5]], _padding2: 0.0, 
+            z: [board[6], board[7], board[8]], _padding3: 0.0,
+        }
+    }).collect::<Vec<Vec9F>>();
+
+    let batch: &[u8] = bytemuck::cast_slice(&current_batch);
+
+    let batch_buf = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("batch buffer"),
+        size: batch.len() as u64,
         usage: 
             wgpu::BufferUsages::UNIFORM 
             | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
 
-    queue.write_buffer(&x_buf, 0, x);
+    queue.write_buffer(&batch_buf, 0, batch);
 
-    let weights_v: &[f32] = &[3.0];
+    let mut weights_v: [f32; 81] = [0.0f32; 81];
+    weights_v.fill(1.0f32);
+    weights_v.;
     let weights: &[u8] = bytemuck::cast_slice(&weights_v);
     let weights_buf = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("weights buffer"),
@@ -49,7 +86,7 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
     queue.write_buffer(&weights_buf, 0, weights);
 
     let biases_v: &[f32] = &[2.0];
-    let biases: &[u8] = bytemuck::cast_slice(&biases_v);
+    let biases: &[u8] = bytemuck::cast_slice(biases_v);
     let biases_buf = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("weights buffer"),
         size: biases.len() as u64,
@@ -61,10 +98,10 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
 
     queue.write_buffer(&biases_buf, 0, biases);
 
-    let cost: &[u8] = bytemuck::cast_slice(&[0.0]);
+    let cost: &[u8] = bytemuck::cast_slice(&[0.0f32]);
     let cost_buf = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("cost buffer"),
-        size: cost.len() as u64,
+        size: cost.len()  as u64,
         usage: 
             wgpu::BufferUsages::STORAGE
             | wgpu::BufferUsages::COPY_DST
@@ -152,7 +189,7 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
         entries: &[
             wgpu::BindGroupEntry {
                 binding: 0,
-                resource: x_buf.as_entire_binding(),
+                resource: batch_buf.as_entire_binding(),
             }, wgpu::BindGroupEntry {
                 binding: 1,
                 resource: weights_buf.as_entire_binding(),
@@ -174,7 +211,7 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
 
         compute_pass.set_pipeline(&cs_pipeline);
         compute_pass.set_bind_group(0, &bind_group, &[]);
-        compute_pass.dispatch_workgroups(1, 1, 1);
+        compute_pass.dispatch_workgroups(BATCHES, 1, 1);
     }
     
     encoder.copy_buffer_to_buffer(&cost_buf, 0, &cost_staging_buf, 0, cost.len() as u64);

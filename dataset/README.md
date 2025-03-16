@@ -42,7 +42,4 @@ whereby, our minimax function returns 1, resulting in
 ───┼───┼───
    │   │
 ```  
-
-Lastly, this was the first ever rust code I wrote simply following documentation and I DID NOT know
-what ownership was. This means the code is horribly inefficient but hey- if I can generate the dataset
-I want in >1 second, no one can complain oki :3
+ion hv a clue on y this happens tho-

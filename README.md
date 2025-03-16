@@ -46,6 +46,6 @@ weight value.
 # Project Structure
 The three directories contain a README, going over their details but here's an overview for the purpose of each directory.  
   
-/dataset is where the dataset used for the project is generated.  
-/neuralnet is where the weights are generated.  
-/tttoneliner is the one liner for Tic-Tac-Toe.
+[/dataset](/dataset/) is where the dataset used for the project is generated.  
+[/neuralnet](/neuralnet/) is where the neural network is written.  
+[/tttoneliner](/tttoneliner/) is the one liner for Tic-Tac-Toe.

@@ -4,22 +4,14 @@ use crate::tictactoe;
 pub fn generate_dataset() -> HashMap<String, i8> {
     let mut ds: HashMap<String, i8> = HashMap::new(); 
     
-    let board: [i8; 9] = tictactoe::initial_state();
+    let board: &[i8; 9] = &tictactoe::initial_state();
     
-    for action in tictactoe::actions(board) {
-        let mut board = tictactoe::result(board, action);
-
-        let optimal_move = tictactoe::minimax(board);
-        ds.insert(board_state(board).to_string(), (8-optimal_move).abs());    
-        board = tictactoe::result(board, optimal_move);
-
-        generate_board(&mut ds, board);
-    }
+    generate_board(&mut ds, board);
 
     ds
 }
 
-fn board_state(board: [i8; 9]) -> i32 {
+pub fn board_state(board: &[i8; 9]) -> i32 {
     let mut o: i32 = 0;
     
     for (i, pos) in board.iter().enumerate() {
@@ -41,16 +33,16 @@ fn board_state(board: [i8; 9]) -> i32 {
 // btw, we dont have to worry about getting the same position from different
 // starting points, as the hashmap should replace the original one but they
 // will be the same value, (i think ;D)
-fn generate_board(ds: &mut HashMap<String, i8>, board: [i8; 9]) {
+fn generate_board(ds: &mut HashMap<String, i8>, board: &[i8; 9]) {
     for action in tictactoe::actions(board) {
-        let mut board = tictactoe::result(board, action);
+        let board = &tictactoe::result(board, action);
         if tictactoe::terminal(board) {
             return;
         }
         
         let optimal_move = tictactoe::minimax(board);
         ds.insert(board_state(board).to_string(), (8-optimal_move).abs());    
-        board = tictactoe::result(board, optimal_move);
+        let board = &tictactoe::result(board, optimal_move);
 
         generate_board(ds, board);
     }
