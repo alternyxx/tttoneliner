@@ -48,6 +48,7 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
     // and seperate them into batches of 64 (workgroup size to access)
     let batches: Vec<Vec<Vec<f32>>> = tmp.chunks(64).map(|s| s.into()).collect();
 
+    // flattening it so its sendable
     let current_batch_v = batches[0].iter().flatten().copied().collect::<Vec<f32>>();
     let current_batch = current_batch_v.chunks(9).map(|board| {
         Vec9F {
@@ -72,8 +73,19 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
 
     let mut weights_v: [f32; 81] = [0.0f32; 81];
     weights_v.fill(1.0f32);
-    weights_v.;
-    let weights: &[u8] = bytemuck::cast_slice(&weights_v);
+    let tmp = Vec9F{
+        x: [1.0, 1.0, 1.0], _padding1: 0.0, 
+        y: [1.0, 1.0, 1.0], _padding2: 0.0, 
+        z: [1.0, 1.0, 1.0], _padding3: 0.0, 
+    };
+    let weights = [Mat9x9F {
+        a: tmp.clone(), b: tmp.clone(), c: tmp.clone(),
+        d: tmp.clone(), e: tmp.clone(), f: tmp.clone(),
+        g: tmp.clone(), h: tmp.clone(), i: tmp.clone(), 
+    }];
+
+    // weights_v.;
+    let weights: &[u8] = bytemuck::cast_slice(&weights);
     let weights_buf = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("weights buffer"),
         size: weights.len() as u64,
@@ -98,6 +110,7 @@ pub async fn neuralnet(dataset: &mut HashMap<i32, i32>) {
 
     queue.write_buffer(&biases_buf, 0, biases);
 
+    let cost_v = [];
     let cost: &[u8] = bytemuck::cast_slice(&[0.0f32]);
     let cost_buf = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("cost buffer"),

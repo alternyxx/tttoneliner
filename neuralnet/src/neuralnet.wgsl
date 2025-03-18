@@ -5,11 +5,12 @@
 }                 // this means we're gonna have to deal with
 // doing things like vec9f.x.x sadly ;-;
 
+// and for this mat9x9f.a.x.x UHMM I HATE WGSL?
 struct mat9x9f {
     a: vec9f, b: vec9f, c: vec9f,
     d: vec9f, e: vec9f, f: vec9f,
     g: vec9f, h: vec9f, i: vec9f,
-}
+} 
 
 @group(0) @binding(0) var<uniform> X: array<vec9f, 64>;
 @group(0) @binding(1) var<uniform> weights: mat9x9f;
@@ -27,5 +28,5 @@ fn cs_main(@builtin(global_invocation_id) id: vec3u) {
     a.x += two;
     a.y += two;
     a.z += two;
-    cost = X[0].x.x;
+    cost = X[id.x].x.x;
 }
