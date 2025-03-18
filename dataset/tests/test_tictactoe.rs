@@ -139,24 +139,13 @@ mod tests {
         assert_eq!(expected, result);
     }
 
+    #[test]
     fn test_no_one_won() {
         let expected = 0;
         let result = winner(&[
             2, 1, 1,
             1, 2, 2,
             2, 1, 1,
-        ]);
-
-        assert_eq!(expected, result);
-    }
-
-    #[test]
-    fn test_player_two_won_vertical() {
-        let expected = 2;
-        let result = winner(&[
-            2, 0, 1,
-            0, 2, 1,
-            0, 0, 1,
         ]);
 
         assert_eq!(expected, result);
