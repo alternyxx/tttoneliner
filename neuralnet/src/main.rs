@@ -13,17 +13,21 @@ fn main() -> std::io::Result<()> {
     
     let data: serde_json::Value = serde_json::from_str(&data).expect("uhm");
 
-    let mut inputs: Vec<Vec<f32>> = vec!();
-    let mut expected_outputs: Vec<f32> = Vec::new();
+    let mut inputs: Vec<Vec<f32>> = Vec::new();
+    let mut outputs: Vec<Vec<f32>> = Vec::new();
     for (i, (board, optimal_move)) in data.as_object().unwrap().iter().enumerate() {
         inputs.insert(i, board.chars().map(|c| c.to_digit(10).unwrap() as f32).collect::<Vec<f32>>());
-        expected_outputs.insert(i, optimal_move.as_f64().unwrap() as f32);
+        
+        let mut output_vec = vec![0.0f32; 9];
+        output_vec[optimal_move.as_u64().unwrap() as usize] = 1.0;
+        outputs.insert(i, output_vec);
     }   
     drop(data);
 
-    pollster::block_on(
-        neuralnet::NeuralNet::new(&mut inputs, &mut vec!([9]), expected_outputs, 64u32)
+    let nn = pollster::block_on(
+        neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![9i32], 64u32)
     );
+    nn.train();
 
     Ok(())
 }

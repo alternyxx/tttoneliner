@@ -10,3 +10,4 @@ The forward pass is done in neuralnet.wgsl
 and we retrieve back the data and do the backward propagation in the rust side.
 
 During forward pass, we send batches of 64 to the gpu
+
