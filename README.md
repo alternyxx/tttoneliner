@@ -40,13 +40,15 @@ and below that is the functions I've tried but failed.
 <br>
 $$o(B) = \forall_{j=1}^9 max(0, \sum_{i=0}^8 (B_i w_i,j) + b_j) $$  
 <br>
-In this case, we'd map o(b) so that $2 \times 10^max(o(B))$ can correctly progress the board with the optimal move.
+In this case, we'd map o(b) so that $2 \times 10^(max(o(B)))$ can correctly progress the board with the optimal move.
 You may notice that's just an equation for a forward pass and that's exactly what I ended up having to resort to.  
 For example, below is a function that I first tried,
 <br>
-$$o(B) = w \times B mod 9$$
+$$o(B) = w \times B\ mod\ 9$$
 <br>
 but this ended up not working because of the $n(X) = n(O) + 1$  
+To this extent, I also tried transformations of $B$, for example, incorporating the digit position of $B_i$, but
+it didn't end up working. 
 
 # Project Structure
 The three directories contain a README, going over their details but here's an overview for the purpose of each directory.  

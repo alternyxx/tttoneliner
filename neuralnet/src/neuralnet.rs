@@ -1,5 +1,6 @@
 use pollster::FutureExt;
 
+#[allow(dead_code)] // temporarily 
 // ion wanna deal w/ lifetimes
 pub struct NeuralNet {
     device: wgpu::Device,
@@ -49,7 +50,7 @@ impl NeuralNet {
 
     pub fn train(&self) {
         // flattening it so its sendable
-        let current_batch = self.batches[0].iter().flatten().copied().collect::<Vec<f32>>();
+        let current_batch: Vec<f32> = self.batches[0].iter().flatten().copied().collect::<Vec<f32>>();
         let batch: &[u8] = bytemuck::cast_slice(&current_batch);
     
         let batch_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
@@ -88,6 +89,18 @@ impl NeuralNet {
             mapped_at_creation: false,
         });
         
+        
+        let current_expected_outputs: Vec<f32> = self.expected_outputs[0].iter().flatten().copied().collect::<Vec<f32>>();
+        let expected_outputs: &[u8] = bytemuck::cast_slice(&current_expected_outputs);
+        let expected_outputs_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("expected outputs buffer"),
+            size: expected_outputs.len() as u64,
+            usage:
+                wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
         
         let costs_v: Vec<f32> = vec![0.0f32; self.n_batches as usize];
         let costs: &[u8] = bytemuck::cast_slice(&costs_v);
@@ -129,6 +142,17 @@ impl NeuralNet {
                     count: None,
                 }, wgpu::BindGroupLayoutEntry {
                     binding: 1,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { 
+                            read_only: true 
+                        },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }, wgpu::BindGroupLayoutEntry {
+                    binding: 2,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { 
@@ -197,6 +221,9 @@ impl NeuralNet {
                     resource: biases_buf.as_entire_binding(),
                 }, wgpu::BindGroupEntry {
                     binding: 3,
+                    resource: expected_outputs_buf.as_entire_binding(),
+                }, wgpu::BindGroupEntry {
+                    binding: 4,
                     resource: costs_buf.as_entire_binding(),
                 }, 
             ]
@@ -206,6 +233,7 @@ impl NeuralNet {
         self.queue.write_buffer(&batch_buf, 0, batch);
         self.queue.write_buffer(&weights_buf, 0, weights);
         self.queue.write_buffer(&biases_buf, 0, biases);
+        self.queue.write_buffer(&expected_outputs_buf, 0, expected_outputs);
         self.queue.write_buffer(&costs_buf, 0, costs);
 
         self.compute(&cs_pipeline, &bind_group, &costs_buf, &costs_staging_buf, &costs_len).block_on();
