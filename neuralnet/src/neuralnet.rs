@@ -50,7 +50,7 @@ impl NeuralNet {
 
     pub fn train(&self) {
         // flattening it so its sendable
-        let current_batch: Vec<f32> = self.batches[0].iter().flatten().copied().collect::<Vec<f32>>();
+        let current_batch: Vec<f32> = self.batches[4].iter().flatten().copied().collect::<Vec<f32>>();
         let batch: &[u8] = bytemuck::cast_slice(&current_batch);
     
         let batch_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
@@ -90,7 +90,7 @@ impl NeuralNet {
         });
         
         
-        let current_expected_outputs: Vec<f32> = self.expected_outputs[0].iter().flatten().copied().collect::<Vec<f32>>();
+        let current_expected_outputs: Vec<f32> = self.expected_outputs[4].iter().flatten().copied().collect::<Vec<f32>>();
         let expected_outputs: &[u8] = bytemuck::cast_slice(&current_expected_outputs);
         let expected_outputs_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("expected outputs buffer"),
@@ -102,9 +102,10 @@ impl NeuralNet {
         });
 
         
-        let costs_v: Vec<f32> = vec![0.0f32; self.n_batches as usize];
+        let costs_v: Vec<f32> = vec![vec![0.0f32; self.n_batches as usize]; 64]
+            .iter().flatten().copied().collect::<Vec<f32>>();
         let costs: &[u8] = bytemuck::cast_slice(&costs_v);
-        let costs_len = costs.len()  as u64; // we'll be doing a lot of computes so might as well
+        let costs_len = costs.len() as u64; // we'll be doing a lot of computes so might as well
 
         let costs_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("cost buffer"),
