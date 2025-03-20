@@ -163,7 +163,7 @@ impl NeuralNet {
                     },
                     count: None,
                 }, wgpu::BindGroupLayoutEntry {
-                    binding: 2,
+                    binding: 3,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { 
@@ -174,7 +174,7 @@ impl NeuralNet {
                     },
                     count: None,
                 }, wgpu::BindGroupLayoutEntry {
-                    binding: 3,
+                    binding: 4,
                     visibility: wgpu::ShaderStages::COMPUTE,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage {
