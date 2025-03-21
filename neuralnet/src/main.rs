@@ -24,10 +24,43 @@ fn main() -> std::io::Result<()> {
     }   
     drop(data);
 
-    let nn = pollster::block_on(
-        neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![9i32], 64u32)
-    );
-    nn.train();
+    // let nn = pollster::block_on(
+    //     neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![9i32], 64u32)
+    // );
+    // nn.train();
+
+    println!("{}", template_wgsl("var ?{uhmmm}; \n like that's so ?{weird}"));
 
     Ok(())
+}
+
+fn template_wgsl(wgsl: &str) -> String {
+    let mut templating = false;
+    let mut template_variable: String = String::new();
+    let mut templated_wgsl: String = String::new();
+
+    for (_i, char) in wgsl.chars().enumerate() {
+        
+        // in the process of templating
+        if templating {
+            if char == '}' {
+                templated_wgsl += "bruh";
+                template_variable = String::new();
+                templating = false;
+            } else if char == '{' {
+                continue
+            } else {
+                template_variable += &char.to_string();    
+            }
+
+            continue
+        } else if char == '?' {
+            templating = true;
+        } else {
+            templated_wgsl += &char.to_string();
+        }
+
+    }
+
+    templated_wgsl
 }

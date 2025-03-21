@@ -23,21 +23,11 @@ fn cs_main(@builtin(global_invocation_id) id: vec3u) {
         }
     }
 
-    var outputs = vec9f();
-    var sum = 0.0;
-    for (var i = 0; i < 9; i += 1) {
-        let tmp = pow(e, zl.elements[i] - highest);
-        outputs.elements[i] = tmp;
-        sum += tmp; 
-    }
+    var outputs = softmax_activation(zl, highest);
 
+    let cross_entropy = categorial_cross_entropy(outputs, expected_outputs[id.x]);
     for (var i = 0; i < 9; i += 1) {
-        outputs.elements[i] /= sum;
-    }
-
-    for (var i = 0; i < 9; i += 1) {
-        // costs[id.x].elements[i] = pow(outputs.elements[i] - expected_outputs[id.x].elements[i], 2.0);
-        costs[id.x].elements[i] = zl.elements[i];
+        costs[id.x].elements[i] = cross_entropy.elements[i];
     }
 }
 
@@ -51,4 +41,35 @@ fn dot(weights_d: array<vec9f, 9>, x_d: vec9f) -> vec9f {
     }
 
     return result;
+}
+
+fn reLU(output: f32) -> f32 {
+    return max(0.0, output);
+}
+
+fn softmax_activation(zl: vec9f, highest: f32) -> vec9f {
+    var outputs = vec9f();
+
+    var sum = 0.0;
+    // calculate e_i^zl
+    for (var i = 0; i < 9; i += 1) {
+        let tmp = pow(e, zl.elements[i] - highest);
+        outputs.elements[i] = tmp;
+        sum += tmp; 
+    }
+
+    // e_i^zl / sum(e^zl)
+    for (var i = 0; i < 9; i += 1) {
+        outputs.elements[i] /= sum;
+    }
+
+    return outputs;
+}
+
+fn categorial_cross_entropy(outputs: vec9f, expected_outputs: vec9f) -> vec9f {
+    var costs = vec9f();
+    for (var i = 0; i < 9; i += 1) {
+        costs.elements[i] = pow(outputs.elements[i] - expected_outputs.elements[i], 2.0);
+    }    
+    return costs;
 }

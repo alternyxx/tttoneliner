@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use pollster::FutureExt;
 
 #[allow(dead_code)] // temporarily 
@@ -48,6 +49,23 @@ impl NeuralNet {
         }
     }
 
+    // this function is created because i want js/ts template literals and
+    // pipeline constants aren't enough
+    fn template_wgsl(wgsl: &str) {
+        let mut templating = false;
+        let mut template_variable: String = "".to_owned();
+
+        for (_i, char) in wgsl.chars().enumerate() {
+            if char == '?' {
+                templating = true;
+            }
+
+            if templating {
+                template_variable += &char.to_string();
+            }
+        }
+    }
+
     pub fn train(&self) {
         // flattening it so its sendable
         let current_batch: Vec<f32> = self.batches[4].iter().flatten().copied().collect::<Vec<f32>>();
@@ -64,9 +82,13 @@ impl NeuralNet {
         
 
         // temporarily hard coded
-        let mut weights_t: Vec<Vec<f32>> = vec![Vec::new(); 9];
-        weights_t.fill(vec![1.0; 9]);
-        let weights_v: Vec<f32> = weights_t.iter().flatten().copied().collect::<Vec<f32>>();
+        let mut rng = rand::rng();
+
+        let weights_v: Vec<f32> = (0..9)
+            .map(|_| (0..9).map(|_| rng.random_range(-10.0..10.0)).collect())
+            .collect::<Vec<Vec<f32>>>()
+            .iter().flatten().copied().collect::<Vec<f32>>();
+
         let weights: &[u8] = bytemuck::cast_slice(&weights_v);
         let weights_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("weights buffer"),
@@ -102,7 +124,7 @@ impl NeuralNet {
         });
 
         
-        let costs_v: Vec<f32> = vec![vec![0.0f32; self.n_batches as usize]; 64]
+        let costs_v: Vec<f32> = vec![vec![0.0f32; 9]; 64]
             .iter().flatten().copied().collect::<Vec<f32>>();
         let costs: &[u8] = bytemuck::cast_slice(&costs_v);
         let costs_len = costs.len() as u64; // we'll be doing a lot of computes so might as well
@@ -197,7 +219,7 @@ impl NeuralNet {
         });
     
         let cs_module = self.device.create_shader_module(wgpu::include_wgsl!("neuralnet.wgsl"));
-        
+         
         let cs_pipeline = self.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("compute pipeline"),
             layout: Some(&cs_pipeline_layout),
@@ -280,4 +302,3 @@ impl NeuralNet {
         }
     }
 }
-
