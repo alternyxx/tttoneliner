@@ -1,8 +1,7 @@
 use rand::prelude::*;
 use pollster::FutureExt;
+use std::collections::HashMap;
 
-#[allow(dead_code)] // temporarily 
-// ion wanna deal w/ lifetimes
 pub struct NeuralNet {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -51,19 +50,36 @@ impl NeuralNet {
 
     // this function is created because i want js/ts template literals and
     // pipeline constants aren't enough
-    fn template_wgsl(wgsl: &str) {
+    // also im not gonna write a whole parser just so this can ignore comments xd
+    fn template_wgsl(&self, wgsl: &str, literals: HashMap<String, String>) -> String {
         let mut templating = false;
-        let mut template_variable: String = "".to_owned();
-
-        for (_i, char) in wgsl.chars().enumerate() {
-            if char == '?' {
-                templating = true;
-            }
-
+        let mut template_variable: String = String::new();
+        let mut templated_wgsl: String = String::new();
+    
+        for char in wgsl.chars() {
+            // in the process of templating
             if templating {
-                template_variable += &char.to_string();
-            }
+                if char == '}' {                                        
+                    templated_wgsl += literals.get(&template_variable.to_string())
+                        .unwrap_or_else(|| panic!("\n{} wasn't given\n", template_variable.to_string()));
+
+                    template_variable = String::new();
+                    templating = false;
+                } else if char == '{' {
+                    continue
+                } else {
+                    template_variable += &char.to_string();    
+                }
+    
+                continue
+            } else if char == '$' {
+                templating = true;
+            } else {
+                templated_wgsl += &char.to_string();
+            }    
         }
+    
+        templated_wgsl
     }
 
     pub fn train(&self) {
@@ -124,8 +140,7 @@ impl NeuralNet {
         });
 
         
-        let costs_v: Vec<f32> = vec![vec![0.0f32; 9]; 64]
-            .iter().flatten().copied().collect::<Vec<f32>>();
+        let costs_v: Vec<f32> = vec![0.0; self.n_batches as usize];
         let costs: &[u8] = bytemuck::cast_slice(&costs_v);
         let costs_len = costs.len() as u64; // we'll be doing a lot of computes so might as well
 
@@ -217,8 +232,23 @@ impl NeuralNet {
             bind_group_layouts: &[&bind_group_layout],
             push_constant_ranges: &[],
         });
-    
-        let cs_module = self.device.create_shader_module(wgpu::include_wgsl!("neuralnet.wgsl"));
+
+        let prev_n_weights = 0;
+        let cs_module = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("forward propagation module"),
+            source: wgpu::ShaderSource::Wgsl(
+                self.template_wgsl(include_str!("neuralnet.wgsl").into(), HashMap::from([
+                    ("n_batches".to_string(), self.n_batches.to_string()),
+                    ("n_layers".to_string(), self.layers.len().to_string()),
+                    ("weights".to_string(), self.layers.iter().enumerate().map(|(i, l)| {
+                        format!("weights{}: array<f32, {}>,\n", i, l)
+                    }).collect()),
+                    ("biases".to_string(), self.layers.iter().enumerate().map(|(i, l)| {
+                        format!("biases{}: array<f32, {}>,\n", i, l)
+                    }).collect()),
+                ])).into()
+            ),
+        });
          
         let cs_pipeline = self.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("compute pipeline"),

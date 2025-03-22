@@ -2,7 +2,7 @@
 A neural network from scratch.  
 
 ### Why?
-idk- i shouldve prob js used a framework- ;-; this did NOT need any gpu operations :sob:
+idk- i shouldve prob js used a framework- ;-; this did NOT need any gpu operations
 
 # Explanation
 The neural network is divided into two parts, neuralnet.rs and neuralnet.wgsl  

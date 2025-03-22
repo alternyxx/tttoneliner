@@ -1,34 +1,40 @@
+// custom wgsl file allowing javascript string interpolation
+// and since i have that why use pipeline constants :shrug:
+const e = 2.71828182846;
+const n_batches = ${n_batches};
+const n_outputs = ${n_outputs};
+
 struct vec9f {
     elements: array<f32, 9>
 }
 
-@group(0) @binding(0) var<storage> X: array<vec9f>;
+struct Weights {
+    ${weights} // ie, weights0: array<array<f32, 12>, 9>
+}
+
+struct Biases {
+    ${biases} // ie, biases0: array<f32, 12>
+}
+
+@group(0) @binding(0) var<storage> inputs: array<vec9f, n_batches>;
 @group(0) @binding(1) var<storage> weights: array<vec9f, 9>;
 @group(0) @binding(2) var<storage> biases: array<f32>;
-@group(0) @binding(3) var<storage> expected_outputs: array<vec9f>;
-@group(0) @binding(4) var<storage, read_write> costs: array<vec9f>;
+@group(0) @binding(3) var<storage> expected_outputs: array<vec9f, n_batches>;
+@group(0) @binding(4) var<storage, read_write> costs: array<f32, n_batches>;
 
-const e = 2.718281;
-
-@compute @workgroup_size(64, 1, 1)
+@compute @workgroup_size(n_batches, 1, 1)
 fn cs_main(@builtin(global_invocation_id) id: vec3u) {
-    let current_batch = X[id.x];
+    let current_batch = inputs[id.x];
 
     var zl = dot(weights, current_batch);
-    var highest = -99999999.0;
+    var highest = -9.0e-10;
     for (var i = 0; i < 9; i += 1) {
         zl.elements[i] += biases[i];
-        if zl.elements[i] > highest {
-            highest = zl.elements[i];
-        }
     }
 
-    var outputs = softmax_activation(zl, highest);
+    var softmax_outputs = softmax_activation(zl);
 
-    let cross_entropy = categorial_cross_entropy(outputs, expected_outputs[id.x]);
-    for (var i = 0; i < 9; i += 1) {
-        costs[id.x].elements[i] = cross_entropy.elements[i];
-    }
+    costs[id.x] = categorial_cross_entropy(expected_outputs[id.x], softmax_outputs);
 }
 
 fn dot(weights_d: array<vec9f, 9>, x_d: vec9f) -> vec9f {
@@ -47,8 +53,16 @@ fn reLU(output: f32) -> f32 {
     return max(0.0, output);
 }
 
-fn softmax_activation(zl: vec9f, highest: f32) -> vec9f {
+// O(n^3) function :sob:
+fn softmax_activation(zl: vec9f) -> vec9f {
     var outputs = vec9f();
+
+    var highest = 0.0;
+    for (var i = 0; i < 9; i += 1) {
+        if zl.elements[i] > highest {
+            highest = zl.elements[i];
+        }
+    }
 
     var sum = 0.0;
     // calculate e_i^zl
@@ -66,10 +80,10 @@ fn softmax_activation(zl: vec9f, highest: f32) -> vec9f {
     return outputs;
 }
 
-fn categorial_cross_entropy(outputs: vec9f, expected_outputs: vec9f) -> vec9f {
-    var costs = vec9f();
+fn categorial_cross_entropy(expected_outputs_d: vec9f, softmax_outputs: vec9f) -> f32 {
+    var cost = 0.0;
     for (var i = 0; i < 9; i += 1) {
-        costs.elements[i] = pow(outputs.elements[i] - expected_outputs.elements[i], 2.0);
-    }    
-    return costs;
+        cost += expected_outputs_d.elements[i] * log(clamp(softmax_outputs.elements[i], 1.0e-7, 1.0));
+    }
+    return -cost;
 }
