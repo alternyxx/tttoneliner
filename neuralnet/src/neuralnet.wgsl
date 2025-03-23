@@ -1,5 +1,3 @@
-// custom wgsl file allowing javascript string interpolation :questionable:
-// and since i have that why use pipeline constants :shrug:
 const e = 2.71828182846;
 const n_batches = ${n_batches};
 const n_outputs = ${n_outputs};
@@ -18,15 +16,8 @@ struct Biases {
 @group(0) @binding(3) var<storage> expected_outputs: array<array<f32, n_outputs>, n_batches>;
 @group(0) @binding(4) var<storage, read_write> costs: array<f32>;
 
-@compute @workgroup_size(n_batches, 1, 1)
+@compute @workgroup_size(${n_batches}, 1, 1)
 fn forward_pass(@builtin(global_invocation_id) id: vec3u) {
-    // let current_batch = inputs[id.x];
-
-    // var zl = dot(weights, current_batch);
-
-    // var softmax_outputs = softmax_activation(zl);
-
-    // costs[id.x] = categorial_cross_entropy(expected_outputs[id.x], softmax_outputs);
     costs[id.x] = 69.0;
 }
 
@@ -46,22 +37,24 @@ fn reLU(zl: f32) -> f32 {
     return max(0.0, zl);
 }
 
-// O(n^3) function :sob:
 fn softmax_activation(zl: array<f32, n_outputs>) -> array<f32, n_outputs> {
     var softmax_outputs = array<f32, n_outputs>();
     
     // find the highest :/ dek if this saves resources in this case sob
     var highest = 0.0;
     for (var i = 0; i < n_outputs; i += 1) {
-        if zl[i] > highest {
-            highest = zl[i];
-        }
+        highest = 1.0;
+        var c = pow(2.0, zl[i]);
+        // if zl[i] > highest {
+        //     highest = zl[i];
+        // }
+        softmax_outputs[i] = c;
     }
 
     // calculate e_i^zl
-    var sum = 0.0;
+    var sum = 1.0e-20;
     for (var i = 0; i < n_outputs; i += 1) {
-        let tmp = pow(e, zl[i] - highest);
+        let tmp = pow(e, zl[i]);
         softmax_outputs[i] = tmp;
         sum += tmp; 
     }
@@ -81,7 +74,7 @@ fn categorial_cross_entropy(
     var cost = 0.0;
     for (var i = 0; i < n_outputs; i += 1) {
         cost += expected_outputs_d[i] 
-            * log(clamp(softmax_outputs[i], 1.0e-7, 1.0));
+                * log(clamp(softmax_outputs[i], 1.0e-7, 1.0));
     }
     return -cost;
 }

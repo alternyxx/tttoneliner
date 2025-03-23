@@ -122,7 +122,8 @@ impl NeuralNet {
                 templated_wgsl += &char.to_string();
             }    
         }
-    
+        
+        println!("{templated_wgsl}");
         templated_wgsl
     }
 
@@ -269,6 +270,7 @@ impl NeuralNet {
             push_constant_ranges: &[],
         });
 
+        println!("{}", self.layers[self.layers.len() - 1]);
         let cs_module = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("forward propagation module"),
             source: wgpu::ShaderSource::Wgsl(
