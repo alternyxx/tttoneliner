@@ -26,7 +26,7 @@ fn main() -> std::io::Result<()> {
 
     let nn = pollster::block_on(
         neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![12, 9, 9], 64u32)
-    );
+    ).unwrap();
     nn.train();
 
     Ok(())

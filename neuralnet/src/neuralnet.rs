@@ -5,10 +5,12 @@ use std::collections::HashMap;
 pub struct NeuralNet {
     device: wgpu::Device,
     queue: wgpu::Queue,
-    batches: Vec<Vec<Vec<f32>>>,          // for these two, the inner vec is the vector inputs, or vec9f,
+    batches: Vec<Vec<Vec<f32>>>,           // for these two, the inner vec is the vector inputs, or vec9f,
     expected_outputs: Vec<Vec<Vec<f32>>>, // for middle vec, its a single batch, and the outer vec groups the batches
     layers: Vec<i32>, // vec.length() is the number of layers, i32 is the amount of neurons
+    weights: Vec<Vec<Vec<f32>>>, // for this, we can consider the outer vec as the layers and the two inner as a matrix
     n_batches: u32,
+    n_inputs: usize,
 }
 
 impl NeuralNet {
@@ -17,7 +19,34 @@ impl NeuralNet {
         outputs: &mut Vec<Vec<f32>>, 
         layers: Vec<i32>, 
         n_batches: u32,
-    ) -> NeuralNet {        
+    ) -> Result<NeuralNet, String> {        
+        // ~~~ checks to ensure variables are valid ~~~
+        // ensure the length of all inputs are the same
+        let n_inputs: usize;
+        if inputs.is_empty() {
+            return Err("there's nothing to train on?...".to_string());
+        } else {
+            n_inputs = inputs[0].len();
+            for input in inputs.iter() {
+                if input.len() != n_inputs {
+                    return Err("n_inputs must stay consistent".to_string());
+                }
+            }
+        }
+ 
+        // ensure the length of all expected outputs are the same
+        let n_outputs: usize;
+        if layers.is_empty() {
+            return Err("uhh- i mean its possible but like- it would js result in returning inputs...".to_string());
+        } else {
+            n_outputs = layers[layers.len() - 1usize] as usize;
+            for output in outputs.iter() {
+                if output.len() != n_outputs {
+                    return Err("last layer neurons must be the same as neurons or expected outputs len must be same".to_string());
+                }
+            }    
+        }
+        
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
             ..Default::default()
@@ -33,19 +62,34 @@ impl NeuralNet {
             &Default::default(),
             None,
         ).await.unwrap();
-        
+
         // seperate the inputs into batches
         let batches: Vec<Vec<Vec<f32>>> = inputs.chunks(n_batches as usize).map(|s| s.into()).collect();
         let expected_outputs: Vec<Vec<Vec<f32>>> = outputs.chunks(n_batches as usize).map(|s| s.into()).collect();
 
-        Self {
+        // layer variables
+        let mut rng = rand::rng();
+
+        let mut weights: Vec<Vec<Vec<f32>>> = Vec::new();
+        let n_prev_outputs = n_inputs;
+        for i in 0..layers.len() {
+            weights.insert(
+                i, (0..layers[i]).map(|_| (0..n_prev_outputs)
+                    .map(|_| rng.random_range(-9.0..9.0)).collect()
+                ).collect::<Vec<Vec<f32>>>()
+            );
+        }
+
+        Ok(Self {
             device,
             queue,
             batches,
             expected_outputs,
             layers,
+            weights,
             n_batches,
-        }
+            n_inputs,
+        })
     }
 
     // this function is created because i want js/ts template literals and
@@ -95,16 +139,8 @@ impl NeuralNet {
                 | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-        
 
-        // temporarily hard coded
-        let mut rng = rand::rng();
-
-        let weights_v: Vec<f32> = (0..9)
-            .map(|_| (0..9).map(|_| rng.random_range(-10.0..10.0)).collect())
-            .collect::<Vec<Vec<f32>>>()
-            .iter().flatten().copied().collect::<Vec<f32>>();
-
+        let weights_v: Vec<f32> = self.weights.iter().cloned().into_iter().flatten().flatten().collect::<Vec<f32>>();
         let weights: &[u8] = bytemuck::cast_slice(&weights_v);
         let weights_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("weights buffer"),
@@ -233,12 +269,13 @@ impl NeuralNet {
             push_constant_ranges: &[],
         });
 
-        let prev_n_weights = 0;
         let cs_module = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("forward propagation module"),
             source: wgpu::ShaderSource::Wgsl(
                 self.template_wgsl(include_str!("neuralnet.wgsl").into(), HashMap::from([
                     ("n_batches".to_string(), self.n_batches.to_string()),
+                    ("n_inputs".to_string(), self.n_inputs.to_string()),
+                    ("n_outputs".to_string(), self.layers[self.layers.len() - 1].to_string()),
                     ("n_layers".to_string(), self.layers.len().to_string()),
                     ("weights".to_string(), self.layers.iter().enumerate().map(|(i, l)| {
                         format!("weights{}: array<f32, {}>,\n", i, l)
@@ -254,7 +291,7 @@ impl NeuralNet {
             label: Some("compute pipeline"),
             layout: Some(&cs_pipeline_layout),
             module: &cs_module,
-            entry_point: Some("cs_main"),
+            entry_point: Some("forward_pass"),
             compilation_options: wgpu::PipelineCompilationOptions::default(),
             cache: None,
         });
@@ -287,7 +324,7 @@ impl NeuralNet {
         self.queue.write_buffer(&weights_buf, 0, weights);
         self.queue.write_buffer(&biases_buf, 0, biases);
         self.queue.write_buffer(&expected_outputs_buf, 0, expected_outputs);
-        self.queue.write_buffer(&costs_buf, 0, costs);
+        self.queue.write_buffer(&costs_buf, 0, costs);  
 
         self.compute(&cs_pipeline, &bind_group, &costs_buf, &costs_staging_buf, &costs_len).block_on();
     }
