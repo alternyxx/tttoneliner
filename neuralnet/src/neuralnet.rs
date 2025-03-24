@@ -1,4 +1,6 @@
 use rand::prelude::*;
+use rand_distr::Normal;
+use indoc::formatdoc;
 use pollster::FutureExt;
 use std::collections::HashMap;
 
@@ -9,6 +11,7 @@ pub struct NeuralNet {
     expected_outputs: Vec<Vec<Vec<f32>>>, // for middle vec, its a single batch, and the outer vec groups the batches
     layers: Vec<i32>, // vec.length() is the number of layers, i32 is the amount of neurons
     weights: Vec<Vec<Vec<f32>>>, // for this, we can consider the outer vec as the layers and the two inner as a matrix
+    biases: Vec<Vec<f32>>, // outer vec is layers, inner vec is the vector of biases :/
     n_batches: u32,
     n_inputs: usize,
 }
@@ -71,13 +74,21 @@ impl NeuralNet {
         let mut rng = rand::rng();
 
         let mut weights: Vec<Vec<Vec<f32>>> = Vec::new();
-        let n_prev_outputs = n_inputs;
-        for i in 0..layers.len() {
-            weights.insert(
-                i, (0..layers[i]).map(|_| (0..n_prev_outputs)
-                    .map(|_| rng.random_range(-9.0..9.0)).collect()
-                ).collect::<Vec<Vec<f32>>>()
-            );
+        let mut biases: Vec<Vec<f32>> = Vec::new();
+        
+        let mut n_prev_outputs = n_inputs as i32;
+        for n_neurons in layers.iter() {
+            weights.push((0..*n_neurons)
+                .map(|_| (0..n_prev_outputs)
+                .map(|_| {
+                    Normal::new(0.0, (2.0/n_prev_outputs as f32).sqrt())
+                        .unwrap().sample(&mut rng)
+                }).collect()
+            ).collect::<Vec<Vec<f32>>>());
+
+            biases.push(vec![0.01; *n_neurons as usize]);
+
+            n_prev_outputs = *n_neurons;
         }
 
         Ok(Self {
@@ -87,6 +98,7 @@ impl NeuralNet {
             expected_outputs,
             layers,
             weights,
+            biases,
             n_batches,
             n_inputs,
         })
@@ -123,7 +135,7 @@ impl NeuralNet {
             }    
         }
         
-        println!("{templated_wgsl}");
+        // println!("{templated_wgsl}");
         templated_wgsl
     }
 
@@ -153,8 +165,8 @@ impl NeuralNet {
         });
     
         
-        let biases_v: &[f32] = &[2.0; 9];
-        let biases: &[u8] = bytemuck::cast_slice(biases_v);
+        let biases_v: Vec<f32> = self.biases.iter().cloned().flatten().collect::<Vec<f32>>();
+        let biases: &[u8] = bytemuck::cast_slice(&biases_v);
         let biases_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("weights buffer"),
             size: biases.len() as u64,
@@ -270,21 +282,69 @@ impl NeuralNet {
             push_constant_ranges: &[],
         });
 
-        println!("{}", self.layers[self.layers.len() - 1]);
+        // dynamic code generation
+        let n_layers = self.layers.len();
+        let mut i_weights = String::new();
+        let mut i_biases = String::new();
+        let mut forward = String::new();
+        let mut layers = String::new();
+
+        let mut x_parameter = "X[id.x]".to_string();
+        let mut prev_outputs = self.n_inputs as i32;
+        for (i, n_neurons) in self.layers.iter().enumerate() {
+            i_weights += &format!("weights{i}: array<array<f32, {prev_outputs}>, {n_neurons}>,\n");
+            i_biases += &format!("biases{i}: array<f32, {n_neurons}>,\n");
+
+            if i > 0 {
+                x_parameter = format!("al{}", i - 1);
+            }
+            
+            let relu: &str;
+            if i == n_layers {
+                relu = "al[i] = ReLU(al[i]);";
+            } else {
+                relu = "";
+            }
+
+            forward += &formatdoc!{"
+                let al{i} = layer{i}({x_parameter}, weights.weights{i}, biases.biases{i});
+            "};
+
+            layers += &formatdoc!{"
+                fn layer{i}(
+                    X_i: array<f32, {prev_outputs}>,
+                    weights_i: array<array<f32, {prev_outputs}>, {n_neurons}>,
+                    biases_i: array<f32, {n_neurons}>,
+                ) -> array<f32, {n_neurons}> {{
+                    var al = array<f32, {n_neurons}>();
+                    for (var i = 0; i < {n_neurons}; i += 1) {{
+                        for (var j = 0; j < {prev_outputs}; j += 1) {{
+                            al[i] += weights_i[i][j] * X_i[j];
+                        }}
+                        al[i] += biases_i[i];
+                        {relu}
+                    }}
+
+                    return al;
+                }}  
+
+            "};
+            
+            prev_outputs = *n_neurons;
+        }
+
         let cs_module = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("forward propagation module"),
             source: wgpu::ShaderSource::Wgsl(
                 self.template_wgsl(include_str!("neuralnet.wgsl").into(), HashMap::from([
                     ("n_batches".to_string(), self.n_batches.to_string()),
                     ("n_inputs".to_string(), self.n_inputs.to_string()),
-                    ("n_outputs".to_string(), self.layers[self.layers.len() - 1].to_string()),
-                    ("n_layers".to_string(), self.layers.len().to_string()),
-                    ("weights".to_string(), self.layers.iter().enumerate().map(|(i, l)| {
-                        format!("weights{}: array<f32, {}>,\n", i, l)
-                    }).collect()),
-                    ("biases".to_string(), self.layers.iter().enumerate().map(|(i, l)| {
-                        format!("biases{}: array<f32, {}>,\n", i, l)
-                    }).collect()),
+                    ("n_outputs".to_string(), self.layers[n_layers - 1].to_string()),
+                    ("n_al".to_string(), (n_layers - 1).to_string()),
+                    ("i_weights".to_string(), i_weights),
+                    ("i_biases".to_string(), i_biases),
+                    ("forward".to_string(), forward),
+                    ("layers".to_string(), layers),
                 ])).into()
             ),
         });

@@ -15,17 +15,17 @@ fn main() -> std::io::Result<()> {
 
     let mut inputs: Vec<Vec<f32>> = Vec::new();
     let mut outputs: Vec<Vec<f32>> = Vec::new();
-    for (i, (board, optimal_move)) in data.as_object().unwrap().iter().enumerate() {
-        inputs.insert(i, board.chars().map(|c| c.to_digit(10).unwrap() as f32).collect::<Vec<f32>>());
+    for (board, optimal_move) in data.as_object().unwrap() {
+        inputs.push(board.chars().map(|c| c.to_digit(10).unwrap() as f32).collect::<Vec<f32>>());
         
         let mut output_vec = vec![0.0f32; 9];
         output_vec[optimal_move.as_u64().unwrap() as usize] = 1.0;
-        outputs.insert(i, output_vec);
+        outputs.push(output_vec);
     }   
     drop(data);
 
     let nn = pollster::block_on(
-        neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![12, 9, 9], 64u32)
+        neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![9], 64u32)
     ).unwrap();
     nn.train();
 
