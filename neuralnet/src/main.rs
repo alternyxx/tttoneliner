@@ -1,18 +1,14 @@
-use std::fs::File;
-use std::io::prelude::*;
 mod neuralnet;
+mod utils;
+use std::fs::File;
+use std::io::BufReader;
+use neuralnet::NeuralNet;
 
 fn main() -> std::io::Result<()> {
-    env_logger::init();
-
-    let mut data = String::new();
-    {
-        let mut dataset = File::open("./src/datasets/dataset.json")?;
-        dataset.read_to_string(&mut data)?;
-    }
+    let dataset = File::open("./src/datasets/dataset.json")?;
+    let reader = BufReader::new(dataset);
+    let data: serde_json::Value = serde_json::from_reader(reader)?;
     
-    let data: serde_json::Value = serde_json::from_str(&data).expect("uhm");
-
     let mut inputs: Vec<Vec<f32>> = Vec::new();
     let mut outputs: Vec<Vec<f32>> = Vec::new();
     for (board, optimal_move) in data.as_object().unwrap() {
@@ -22,12 +18,9 @@ fn main() -> std::io::Result<()> {
         output_vec[optimal_move.as_u64().unwrap() as usize] = 1.0;
         outputs.push(output_vec);
     }   
-    drop(data);
 
-    let nn = pollster::block_on(
-        neuralnet::NeuralNet::new(&mut inputs, &mut outputs, vec![9], 64u32)
-    ).unwrap();
-    nn.train();
+    let mut nn = NeuralNet::new(&mut inputs, &mut outputs, &[9]).unwrap();
+    nn.train(0.01);
 
     Ok(())
 }
