@@ -101,7 +101,7 @@ impl NeuralNet {
             weights.push((0..*n_neurons)
                 .map(|_| (0..n_prev_outputs)
                 .map(|_| {
-                    Normal::new(0.0, (2.0/n_prev_outputs as f32).sqrt())
+                    Normal::new(0.0, (2.0 / n_prev_outputs as f32).sqrt())
                         .unwrap().sample(&mut rng)
                 }).collect()
             ).collect::<Vec<Vec<f32>>>());
@@ -125,7 +125,7 @@ impl NeuralNet {
 
     pub fn train(&mut self, _learning_rate: f32) {
         let mut current_batch: Vec<f32> = self.batches[0].iter().flatten().copied().collect::<Vec<f32>>();
-        let mut batch: &[u8] = bytemuck::cast_slice(&current_batch);
+        let batch: &[u8] = bytemuck::cast_slice(&current_batch);
     
         let batch_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("batch buffer"),
@@ -136,7 +136,7 @@ impl NeuralNet {
             mapped_at_creation: false,
         });
 
-        let weights_v: Vec<f32> = self.weights.iter().cloned().into_iter().flatten().flatten().collect::<Vec<f32>>();
+        let mut weights_v: Vec<f32> = self.weights.iter().cloned().into_iter().flatten().flatten().collect::<Vec<f32>>();
         let weights: &[u8] = bytemuck::cast_slice(&weights_v);
         let weights_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("weights buffer"),
@@ -146,9 +146,8 @@ impl NeuralNet {
                 | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-    
         
-        let biases_v: Vec<f32> = self.biases.iter().cloned().flatten().collect::<Vec<f32>>();
+        let mut biases_v: Vec<f32> = self.biases.iter().cloned().flatten().collect::<Vec<f32>>();
         let biases: &[u8] = bytemuck::cast_slice(&biases_v);
         let biases_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("weights buffer"),
@@ -158,7 +157,6 @@ impl NeuralNet {
                 | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-        
         
         let current_expected_outputs: Vec<f32> = self.expected_outputs[4].iter().flatten().copied().collect::<Vec<f32>>();
         let expected_outputs: &[u8] = bytemuck::cast_slice(&current_expected_outputs);
@@ -171,7 +169,6 @@ impl NeuralNet {
             mapped_at_creation: false,
         });
 
-        
         let costs_v: Vec<f32> = vec![0.0; self.n_batches as usize];
         let costs: &[u8] = bytemuck::cast_slice(&costs_v);
         let costs_len = costs.len() as u64; // we'll be doing a lot of computes so might as well
@@ -185,16 +182,17 @@ impl NeuralNet {
                 | wgpu::BufferUsages::COPY_SRC,
             mapped_at_creation: false,
         });
-        
+
         let costs_staging_buf = self.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("cost staging buffer"),
+            label: Some("cost staging buffer one"),
             size: costs_len,
             usage: 
                 wgpu::BufferUsages::COPY_DST
                 | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
         });
-        
+
+
         // Bind group layout // 
         let bind_group_layout = self.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("bind group layout"),
@@ -366,24 +364,52 @@ impl NeuralNet {
         });
         
         
-        for i in 1..self.batches.len() {
-            if i > 3 {
-                break
-            }
-            
-            self.queue.write_buffer(&batch_buf, 0, batch);
+        self.queue.write_buffer(&batch_buf, 0, batch);
+        self.queue.write_buffer(&expected_outputs_buf, 0, expected_outputs);
+        self.queue.write_buffer(&costs_buf, 0, costs);
+
+        let mut rng = rand::rng();
+
+        let mut best_average_cost: f32 = 20.0;
+        let mut best_weights = weights_v.clone();
+        let mut best_biases = biases_v.clone();
+        println!("inputs: {:?}\noutputs: {:?}", self.batches[0], self.expected_outputs[0]);
+
+        for a in 0..100000 {
+            weights_v = weights_v.iter().map(|w| w + rng.random_range(-3.00..3.00)).collect::<Vec<f32>>();
+            let weights = bytemuck::cast_slice(&weights_v);
+            biases_v = biases_v.iter().map(|b| b + rng.random_range(-3.00..3.00)).collect::<Vec<f32>>();
+            let biases = bytemuck::cast_slice(&biases_v);
+
             self.queue.write_buffer(&weights_buf, 0, weights);
             self.queue.write_buffer(&biases_buf, 0, biases);
-            self.queue.write_buffer(&expected_outputs_buf, 0, expected_outputs);
-            self.queue.write_buffer(&costs_buf, 0, costs);  
             
-            self.compute(&cs_pipeline, &bind_group, &costs_buf, &costs_staging_buf, &costs_len).block_on();
+            // this is done this way because the variables are previously required for bytelength
+            let mut average_cost = self
+                .compute(&cs_pipeline, &bind_group, &costs_buf, &costs_staging_buf, &costs_len)
+                .block_on();
+
+            for i in 1..self.batches.len() - 2 {
+                current_batch = self.batches[i].iter().flatten().copied().collect();
+                let batch: &[u8] = bytemuck::cast_slice(&current_batch);
+
+                self.queue.write_buffer(&batch_buf, 0, batch);
+                
+                average_cost += self
+                    .compute(&cs_pipeline, &bind_group, &costs_buf, &costs_staging_buf, &costs_len)
+                    .block_on();
+            }
             
-            // the updates to the variables happen here because the variables were previously needed
-            // to get the bytesize of themselves
-            current_batch = self.batches[i].iter().flatten().copied().collect();
-            batch = bytemuck::cast_slice(&current_batch);
-            println!("Succeeded!");
+            average_cost /= (self.batches.len() - 1) as f32;
+            if average_cost < best_average_cost {
+                best_weights = weights_v.clone();
+                best_biases = biases_v.clone();
+                best_average_cost = average_cost;
+                println!("cost: {}, iteration: {a}", best_average_cost);
+            } else {
+                weights_v = best_weights.clone();
+                biases_v = best_biases.clone();
+            }
         }
     }
     
@@ -394,7 +420,7 @@ impl NeuralNet {
         costs_buf: &wgpu::Buffer,           // these two are output buffers
         costs_staging_buf: &wgpu::Buffer,   // this one ofc stages
         costs_len: &u64,
-    ) {
+    ) -> f32 {
         let mut encoder = self.device.create_command_encoder(&Default::default());
         
         // icl killing compute_pass instead of compute_pass.end() is so funny xD
@@ -420,10 +446,20 @@ impl NeuralNet {
         self.device.poll(wgpu::Maintain::Wait);
     
         // like srsly- i have to copy this from compute shaders 101
+        let average_cost: f32;
         if let Some(Ok(())) = receiver.receive().await {
-            let data_raw = &*costs_buf_slice.get_mapped_range();
-            let data: &[f32] = bytemuck::cast_slice(data_raw);
-            println!("{:?}", data);
+            {
+                let costs_raw = &*costs_buf_slice.get_mapped_range();
+                let costs: &[f32] = bytemuck::cast_slice(costs_raw);
+                let costs_sum: f32 = costs.iter().sum();
+                average_cost = costs_sum / costs.len() as f32; 
+            }
+
+            costs_staging_buf.unmap();
+        } else {
+            panic!("uhm");
         }
+
+        average_cost
     }
 }

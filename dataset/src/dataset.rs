@@ -18,8 +18,8 @@ pub fn board_state(board: &[i8; 9]) -> i32 {
         let val: i32;
         match *pos {
             0 => val = 1,
-            1 => val = 2,
-            2 => val = 3,
+            1 => val = 5,
+            2 => val = 9,
             _ => panic!("wahh"),
         }
         let tmp = i as i32;
