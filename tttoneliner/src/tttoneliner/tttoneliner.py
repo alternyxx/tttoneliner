@@ -1,5 +1,3 @@
-# the current version is of course cheating in that its just a hash lookup >:C
-# but i rly wanted the video for the readme 
 boards = {
   112231111: 8,
   213232111: 2,
@@ -445,3 +443,4 @@ boards = {
 }
 
 def main(B=111111111):{print('{}│{}│{}\n───┼───┼───\n{}│{}│{}\n───┼───┼───\n{}│{}│{}'.format(*['   'if i=='1'else' X 'if i=='2'else' O 'for i in str(B)]))for _ in range(5)if(B:=B+1*10**abs(9-int(input())))and(B:=B+2*10**boards[B])}
+main()
