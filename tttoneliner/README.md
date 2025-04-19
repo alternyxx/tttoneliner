@@ -52,7 +52,7 @@ actually two lines of code (just cramped in one line). This is because a functio
 point.  
 
 ### Readable version
-<sub>idt its pep appliant but the format is more readable to me</sub>
+<sub>idt its pep compliant but the format is more readable to me</sub>
 
 ```py
 
@@ -60,7 +60,7 @@ point.
 	print('{}│{}│{}\n───┼───┼───\n{}│{}│{}\n───┼───┼───\n{}│{}│{}'
 		.format(*[' '*3 if i == '1' else ' X ' if i == '5' else ' O ' for i in str(B)])
 	) for _ in range(5)
-		if (B := B + 4 * 10 ** abs(9-int(input())))
+		if (B := B + 4 * 10 ** abs(9 - int(input())))
 			and (y := [2.7182 ** (
 				sum(w[i][j] / 100 * max(0,
                     [sum(
