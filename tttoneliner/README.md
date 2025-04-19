@@ -64,8 +64,8 @@ point.
 			and (y := [2.7182 ** (
 				sum(w[i][j] / 100 * max(0,
                     [sum(
-                        v[k][l] / 100 * list(map(int, str(B))
-                    )[l] for l in range(9)) + a[k] / 100 for k in range(15)][j]
+                        v[k][l] / 100 * list(map(int, str(B)))[l] for l in range(9)
+                    ) + a[k] / 100 for k in range(15)][j]
                 ) for j in range(15)) + b[i] / 100
 			) for i in range(9)])
 			and (B := B + 8 * 10 ** y.index(max(y, key = lambda x: x / sum(y))))
