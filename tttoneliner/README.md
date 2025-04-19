@@ -1,87 +1,105 @@
 # tttoneliner
-A one liner for an AI for Tic-Tac-Toe, with ~300 bytes.  
-<!--All the spaces for newlines are intended-->
-<!--The actual version isnt updated despite all this yap soz :P-->
-<br>    
-![Examples of Tic-Tac-Toe being played](../assets/tttol.gif)  
-<sub>plz some1 provide better quality ;-;</sub>
+A one liner for an AI for Tic-Tac-Toe, with around 1600~ bytes. 
+Well, nearly a perfect AI anyways since you can probably find a lot of positions 
+in which the AI won't play a good move and just... hand you the game.
 
-# pip
-Make sure Python (> 3.10) is installed and added to path, as well as pip.  
-To try it out for yourself,
+# Try It Out!
+Make sure Python 3.10 or newer is installed for any of the below.  
+
+### Interpreter
+Provided below is the one liner which you can simply copy paste and run in the interpreter!
+```py
+{(B:=111111111,{print('{}│{}│{}\n───┼───┼───\n{}│{}│{}\n───┼───┼───\n{}│{}│{}'.format(*['   'if i=='1'else' X 'if i=='5'else' O 'for i in str(B)]))for _ in range(5)if(B:=B+4*10**abs(9-int(input())))and(y:=[2.7182**(sum(w[i][j]/100*max(0,[sum(v[k][l]/100*list(map(int, str(B)))[l]for l in range(9))+a[k]/100 for k in range(15)][j])for j in range(15))+b[i]/100)for i in range(9)])and(B:=B+8*10**y.index(max(y,key=lambda x:x/sum(y))))})for v,w,a,b in[([[-7,-30,-3,-37,-2,13,-11,28,-95],[120,160,-34,-41,145,16,-31,218,-19],[-120,-5,-130,195,-269,86,-166,-24,109],[14,-120,49,15,-130,15,-39,142,64],[23,129,-81,257,100,-48,-28,7,67],[-46,-46,73,-89,291,0,178,61,143],[-23,-23,-260,34,-158,16,212,-41,-278],[-2,86,169,98,47,-164,49,-245,250],[-95,-59,160,194,-80,99,-108,-154,-143],[12,2,68,55,-50,-71,216,216,-167],[47,242,166,-1,4,-81,199,-47,0],[32,40,-160,-167,189,122,199,22,22],[108,-184,41,67,172,21,47,115,-85],[-51,287,-344,62,-134,42,-244,26,-50],[-94,-59,-30,43,10,-40,-43,33,-102]],[[1,-4,7,-107,24,4,-11,-154,73,-12,123,-8,74,77,-156],[-3,-72,6,-343,38,-49,-4,6,85,-109,106,88,57,-96,-28],[0,202,257,0,-12,45,-21,-83,79,-243,8,-224,15,206,2],[40,88,-134,-76,2,-37,-24,126,-261,161,-92,31,-14,-382,36],[-7,-1,-208,265,30,-194,156,-24,41,32,131,82,-167,-177,4],[-30,153,-28,-23,-202,-5,74,80,170,54,-48,85,-40,75,-33],[-3,56,225,7,48,-99,-265,85,-223,131,-103,166,-23,-42,18],[23,-100,-131,187,-133,-44,284,195,-57,139,-250,125,287,-6,28],[4,-196,72,-11,160,348,-250,-307,67,3,85,-192,-275,233,-27]],[0,-166,159,438,-19,153,149,-46,-211,-103,36,-59,-330,67,1],[-269,40,-42,-89,169,92,26,-78,159])]}
 ```
+
+### Pip
+You can also install via pip which conveniently provides an entry point!
+```console
 pip install tttoneliner
 ```
 
-As always, you can also
-```
-git clone https://github.com/alternyxx/tttoneliner
-cd \tttoneliner\tttoneliner
-pip install .
-```
-
-# Trying out
-```
-tttol
-```
-Runs the script and waits for an input.  
-A board is like this-
-```  
- 1 │ 2 │ 3 
-───┼───┼───  
- 4 │ 5 │ 6 
-───┼───┼───  
- 7 │ 8 │ 9 
-```
-and you can type 5 to play in the middle, which should then
-print out
-```
+After which you can simply run the command tttol
+```console
+$ tttol
+5
  O │   │   
 ───┼───┼───
    │ X │
 ───┼───┼───
    │   │
 ```
-The X is a move made by you and the O is made by the AI.  
-For your fairness, there is a single way to beat it (at 
-least from what I've discovered) and is totally not a bug.
 
-# Explanation
+### Build
+As always, you can also just clone the repository.
+```
+git clone https://github.com/alternyxx/tttoneliner
+cd tttoneliner/tttoneliner
+pip install .
+```
+
+After which, you'll have the tttol command :D
+
+# Dev Notes
+### Overview Explanation
+As you may have guessed, it is a neural network, specfically one with two layers. The 
+neural network was trained using my own implementation from scratch which is why this project 
+(which was supposed to be an overnight one) took so long.  
+
+### Other
 It is worth noting that in the actual tttoneliner.py, instead of the outside comprehension to set variables, 
 it is actually a main function using default parameters to set the variables. This means that technically, its 
 actually two lines of code (just cramped in one line). This is because a function is necessary to set an entry 
 point.  
-<br>
-Current versions
-### Most condensed version (wip)
-```python
-def main(B=111111111):{print(B)for _ in range(5)if(B:=B+1*10**abs(9-int(input())))and(B:=B+2*10**boards[B])}
-```
 
-### Readable (And Playable) version (plays random moves)
-```python
-{{
-    print('{}│{}│{}\n───┼───┼───\n{}│{}│{}\n───┼───┼───\n{}│{}│{}'
-        .format(*['   ' if i == '1' else ' X ' if i == '2' else ' O 'for i in str(B)])
-    ) for _ in range(5)
-        if (B := B + 1 * 10 ** abs(9-int(input())))
-            and (t := [2.71 ** (
-                sum(w[i][j] * list(map(int,str(B)))[j] for j in range(9)) + b[i]
-            ) for i in range(9)])
-            and (B := B + 8 * 10 ** t.index(max(t, key = lambda x: x / sum(t))))
- } for B, w, b in [(
-    111111111,
-    [
-        [0.5324228, 0.76355624, 1.0098922, 1.0587181, 0.47961304, 0.8581823, 0.045538172, 1.0410924, -1.579585],
-        [0.4228034, 0.9537834, 0.9404552, 1.0115612, 0.5452481, 0.8414384, 0.0972775, -1.0017858, 0.40512067],
-        [0.7085032, 0.955647, 1.0234874, 1.03152, 0.36106178, 0.82706773, -1.0083874, 0.76845086, 0.19899876],
-        [0.46637133, 0.65566856, 1.0476296, 1.3649647, 0.5284521, -1.0649983, 0.18261205, 0.78231066, 0.3543514],
-        [0.6555538, 0.993636, 1.0712171, 1.2289686, -1.1268336, 0.7060021, 0.121178925, 0.5562301, 0.011001009],
-        [0.6181679, 0.48797947, 1.063911, -0.8666658, 0.55554706, 0.98548925, 0.23587868, 0.90056294, 0.30139807],
-        [0.7447117, 0.6618681, -0.7941452, 1.040301, 0.39376765, 0.8027111, 0.14813231, 0.800058, 0.38237593],
-        [0.6764701, -1.1199214, 1.1118764, 0.79409623, 0.48408085, 0.83786356, 0.18026906, 1.0840094, 0.28564036],
-        [-0.9352118, 0.70592344, 1.1290987, 1.057092, 0.47734314, 0.8022352, 0.11734288, 0.7755984, 0.34827393],
-    ],
-    [-0.27312347, -0.35538667, -0.7696111, -0.9394737, 0.61957735, -0.09319963, 0.28401002, 0.48452064, 0.626548],
+### Readable version
+<sub>idt its pep appliant but the format is more readable to me</sub>
+
+```py
+
+{(B := 111111111, {
+	print('{}│{}│{}\n───┼───┼───\n{}│{}│{}\n───┼───┼───\n{}│{}│{}'
+		.format(*[' '*3 if i == '1' else ' X ' if i == '5' else ' O ' for i in str(B)])
+	) for _ in range(5)
+		if (B := B + 4 * 10 ** abs(9-int(input())))
+			and (y := [2.7182 ** (
+				sum(w[i][j] / 100 * max(0,
+                    [sum(
+                        v[k][l] / 100 * list(map(int, str(B))
+                    )[l] for l in range(9)) + a[k] / 100 for k in range(15)][j]
+                ) for j in range(15)) + b[i] / 100
+			) for i in range(9)])
+			and (B := B + 8 * 10 ** y.index(max(y, key = lambda x: x / sum(y))))
+	}) for v, w, a, b in [(
+	[
+		[-7, -30, -3, -37, -2, 13, -11, 28, -95],
+		[120, 160, -34, -41, 145, 16, -31, 218, -19],
+		[-120, -5, -130, 195, -269, 86, -166, -24, 109],
+		[14, -120, 49, 15, -130, 15, -39, 142, 64],
+		[23, 129, -81, 257, 100, -48, -28, 7, 67],
+		[-46, -46, 73, -89, 291, 0, 178, 61, 143],
+		[-23, -23, -260, 34, -158, 16, 212, -41, -278],
+		[-2, 86, 169, 98, 47, -164, 49, -245, 250],
+		[-95, -59, 160, 194, -80, 99, -108, -154, -143],
+		[12, 2, 68, 55, -50, -71, 216, 216, -167],
+		[47, 242, 166, -1, 4, -81, 199, -47, 0],
+		[32, 40, -160, -167, 189, 122, 199, 22, 22],
+		[108, -184, 41, 67, 172, 21, 47, 115, -85],
+		[-51, 287, -344, 62, -134, 42, -244, 26, -50],
+
+		[-94, -59, -30, 43, 10, -40, -43, 33, -102]
+	],
+	[
+		[1, -4, 7, -107, 24, 4, -11, -154, 73, -12, 123, -8, 74, 77, -156],
+		[-3, -72, 6, -343, 38, -49, -4, 6, 85, -109, 106, 88, 57, -96, -28],
+		[0, 202, 257, 0, -12, 45, -21, -83, 79, -243, 8, -224, 15, 206, 2],
+		[40, 88, -134, -76, 2, -37, -24, 126, -261, 161, -92, 31, -14, -382, 36],
+		[-7, -1, -208, 265, 30, -194, 156, -24, 41, 32, 131, 82, -167, -177, 4],
+		[-30, 153, -28, -23, -202, -5, 74, 80, 170, 54, -48, 85, -40, 75, -33],
+		[-3, 56, 225, 7, 48, -99, -265, 85, -223, 131, -103, 166, -23, -42, 18],
+		[23, -100, -131, 187, -133, -44, 284, 195, -57, 139, -250, 125, 287, -6, 28],
+		[4, -196, 72, -11, 160, 348, -250, -307, 67, 3, 85, -192, -275, 233, -27]
+	],
+	[0, -166, 159, 438, -19, 153, 149, -46, -211, -103, 36, -59, -330, 67, 1],
+	[-269, 40, -42, -89, 169, 92, 26, -78, 159],
 )]}
 ```

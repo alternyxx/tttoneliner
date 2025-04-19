@@ -20,7 +20,7 @@ pub fn board_state(board: &[i8; 9]) -> i32 {
             0 => val = 1,
             1 => val = 5,
             2 => val = 9,
-            _ => panic!("wahh"),
+            _ => panic!("bluh"),
         }
         let tmp = i as i32;
         let digit = (tmp - 8).abs();
