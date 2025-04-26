@@ -1,6 +1,6 @@
 [project]
 name = "tttoneliner"
-version = "0.0.1"
+version = "0.0.2"
 description = "The game of Tic-Tac-Toe in one line of code."
 authors = [
     {name = "alternyxx", email = "alternyxx@gmail.com"}
