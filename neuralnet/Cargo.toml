@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-neuralnyx = "0.1.0"
+neuralnyx = "0.1.1"
 serde_json = "1.0.140"
